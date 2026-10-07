@@ -1,0 +1,342 @@
+.faculty-reviews-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: left;
+}
+
+.page-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 18px;
+}
+
+.page-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.page-header p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.reviews-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .reviews-layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.submissions-list-card,
+.evaluation-form-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #f9fafb;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.submissions-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.submission-item-row {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submission-item-row:last-child {
+  border-bottom: none;
+}
+
+.submission-item-row:hover {
+  background: #f9fafb;
+}
+
+.submission-item-row.active-row {
+  background: #f0fdf4;
+  border-left: 4px solid #16a34a;
+}
+
+.sub-header-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.sub-header-line strong {
+  font-size: 14px;
+  color: #111827;
+}
+
+.sub-date {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.sub-title {
+  font-size: 13px;
+  color: #4b5563;
+  margin: 0 0 8px 0;
+}
+
+.sub-milestone-tag {
+  font-size: 11px;
+  font-weight: 600;
+  background: #eef2ff;
+  color: #4f46e5;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Evaluation Form side panel styles */
+.evaluation-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.eval-info-block {
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eval-info-block label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-top: 8px;
+}
+
+.eval-info-block label:first-child {
+  margin-top: 0;
+}
+
+.eval-info-block p {
+  font-size: 13px;
+  color: #374151;
+  margin: 0;
+}
+
+.attached-file-link a {
+  color: #16a34a;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.attached-file-link a:hover {
+  text-decoration: underline;
+}
+
+/* Form controls */
+.eval-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eval-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eval-form .form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.eval-form input,
+.eval-form select,
+.eval-form textarea {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.eval-form input:focus,
+.eval-form select:focus,
+.eval-form textarea:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+}
+
+.btn-submit-review {
+  padding: 11px;
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+
+.btn-submit-review:hover {
+  background: #15803d;
+}
+
+/* Modal Overlay and Success styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: slideUpModal 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f9fafb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.btn-close-modal {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-close-modal:hover {
+  color: #374151;
+}
+
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.success-icon-badge {
+  width: 48px;
+  height: 48px;
+  background: #d1fae5;
+  color: #059669;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.modal-body p {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.modal-buttons {
+  padding: 14px 20px;
+  background: #f9fafb;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-modal-submit {
+  padding: 8px 16px;
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-modal-submit:hover {
+  background: #15803d;
+}
+
+.assessment-dropdown {
+  cursor: pointer;
+}

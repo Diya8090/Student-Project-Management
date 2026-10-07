@@ -1,0 +1,119 @@
+.app-sidebar {
+  --sidebar-accent: #2563eb;
+  --sidebar-accent-light: #eff6ff;
+  --sidebar-accent-active: #dbeafe;
+  width: 260px;
+  flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+
+.app-sidebar-faculty {
+  --sidebar-accent: #16a34a;
+  --sidebar-accent-light: #f0fdf4;
+  --sidebar-accent-active: #dcfce7;
+}
+
+.app-sidebar-student {
+  --sidebar-accent: #f59e0b;
+  --sidebar-accent-light: #fffbeb;
+  --sidebar-accent-active: #fef3c7;
+}
+
+.sidebar-header {
+  padding: 20px 20px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px 20px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
+  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-link:hover {
+  background: var(--sidebar-accent-light);
+  color: var(--sidebar-accent);
+}
+
+.sidebar-link.active {
+  background: var(--sidebar-accent-active);
+  color: var(--sidebar-accent);
+  font-weight: 600;
+}
+
+.sidebar-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 992px) {
+  .app-sidebar {
+    width: 220px;
+  }
+
+  .sidebar-link {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-sidebar {
+    width: 100%;
+    min-height: auto;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .sidebar-link {
+    flex: 1 1 auto;
+    min-width: fit-content;
+  }
+
+  .sidebar-header {
+    display: none;
+  }
+}

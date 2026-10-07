@@ -1,0 +1,191 @@
+.student-projects-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: left;
+}
+
+.page-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 18px;
+}
+
+.page-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.page-header p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.project-detail-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+  padding: 24px;
+}
+
+.proj-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 12px;
+}
+
+.proj-card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.proj-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: #fffbeb;
+  color: #d97706;
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+
+.proj-desc {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+}
+
+.proj-supervisors-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.supervisor-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.block-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.supervisor-block p {
+  font-size: 14px;
+  color: #111827;
+  margin: 0;
+}
+
+.team-members-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.team-badges-row {
+  display: flex;
+  gap: 8px;
+}
+
+.team-badge {
+  font-size: 12px;
+  font-weight: 600;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* Timeline nodes */
+.milestones-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.timeline-node-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.node-marker-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 16px;
+  position: relative;
+}
+
+.node-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #d1d5db;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px #d1d5db;
+}
+
+.node-marker.status-approved {
+  background: #16a34a;
+  box-shadow: 0 0 0 2px #16a34a;
+}
+
+.node-marker.status-under-review {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px #f59e0b;
+}
+
+.node-marker.status-pending {
+  background: #9ca3af;
+  box-shadow: 0 0 0 2px #d1d5db;
+}
+
+.timeline-connector-line {
+  width: 2px;
+  height: 40px;
+  background: #e5e7eb;
+  margin-top: 4px;
+}
+
+.node-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.node-info-col strong {
+  font-size: 14px;
+  color: #111827;
+}
+
+.node-status {
+  font-size: 12px;
+}
+
+.status-text-approved {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.status-text-under-review {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.status-text-pending {
+  color: #9ca3af;
+}

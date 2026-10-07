@@ -1,0 +1,138 @@
+.faculty-scores-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: left;
+}
+
+.page-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 18px;
+}
+
+.page-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.page-header p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.scores-table-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+.scores-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.scores-table th,
+.scores-table td {
+  padding: 16px 24px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.scores-table th {
+  background: #f9fafb;
+  color: #4b5563;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.scores-table td {
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+}
+
+.scores-table tr:last-child td {
+  border-bottom: none;
+}
+
+.scores-table-student {
+  color: #111827;
+}
+
+.scores-input {
+  width: 70px;
+  padding: 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.scores-input:focus {
+  border-color: #16a34a;
+}
+
+.cumulative-total-value {
+  color: #16a34a;
+  font-size: 15px;
+}
+
+.edit-actions-row {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-score-save {
+  padding: 6px 12px;
+  background: #16a34a;
+  border: none;
+  border-radius: 6px;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.btn-score-save:hover {
+  background: #15803d;
+}
+
+.btn-score-cancel {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #4b5563;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.btn-score-cancel:hover {
+  background: #f9fafb;
+}
+
+.btn-score-edit {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #16a34a;
+  color: #16a34a;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.btn-score-edit:hover {
+  background: #16a34a;
+  color: #ffffff;
+}

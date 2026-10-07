@@ -1,0 +1,230 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\.net(project)\\backend\\Student_project_man\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\validator\\statusvalidator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:validator\\statusvalidator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\controllers\\taskcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:controllers\\taskcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\services\\tokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:services\\tokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\controllers\\prioritycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:controllers\\prioritycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\controllers\\projectcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:controllers\\projectcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\controllers\\userrolecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:controllers\\userrolecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\controllers\\rolecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:controllers\\rolecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|d:\\.net(project)\\backend\\student_project_man\\dtos\\userlogindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CE0873DA-C0DB-21C4-E61C-92A9D948CAD4}|Student_project_man.csproj|solutionrelative:dtos\\userlogindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "StatusValidator.cs",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\Validator\\StatusValidator.cs",
+              "RelativeDocumentMoniker": "Validator\\StatusValidator.cs",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\Validator\\StatusValidator.cs",
+              "RelativeToolTip": "Validator\\StatusValidator.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-25T06:18:28.503Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\Data\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "Data\\AppDbContext.cs",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\Data\\AppDbContext.cs",
+              "RelativeToolTip": "Data\\AppDbContext.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAmwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-25T06:16:19.627Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "TaskController.cs",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\TaskController.cs",
+              "RelativeDocumentMoniker": "Controllers\\TaskController.cs",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\TaskController.cs",
+              "RelativeToolTip": "Controllers\\TaskController.cs",
+              "ViewState": "AgIAAGgBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-22T02:38:51.069Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ProjectController.cs",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\ProjectController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ProjectController.cs",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\ProjectController.cs",
+              "RelativeToolTip": "Controllers\\ProjectController.cs",
+              "ViewState": "AgIAADYAAAAAAAAAAAAYwEsAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-21T05:44:22.4Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "PriorityController.cs",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\PriorityController.cs",
+              "RelativeDocumentMoniker": "Controllers\\PriorityController.cs",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\PriorityController.cs",
+              "RelativeToolTip": "Controllers\\PriorityController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-21T05:44:17.716Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "RoleController.cs",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\RoleController.cs",
+              "RelativeDocumentMoniker": "Controllers\\RoleController.cs",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\RoleController.cs",
+              "RelativeToolTip": "Controllers\\RoleController.cs",
+              "ViewState": "AgIAAIUAAAAAAAAAAAAuwKkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-21T04:13:57.713Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "UserLoginDTO.cs",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\DTOs\\UserLoginDTO.cs",
+              "RelativeDocumentMoniker": "DTOs\\UserLoginDTO.cs",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\DTOs\\UserLoginDTO.cs",
+              "RelativeToolTip": "DTOs\\UserLoginDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T13:01:41.973Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "TokenService.cs",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\Services\\TokenService.cs",
+              "RelativeDocumentMoniker": "Services\\TokenService.cs",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\Services\\TokenService.cs",
+              "RelativeToolTip": "Services\\TokenService.cs",
+              "ViewState": "AgIAADQAAAAAAAAAAAAYwEQAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T12:43:01.767Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-09-15T12:35:34.51Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "UserController.cs",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\UserController.cs",
+              "RelativeDocumentMoniker": "Controllers\\UserController.cs",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\UserController.cs",
+              "RelativeToolTip": "Controllers\\UserController.cs",
+              "ViewState": "AgIAAPwAAAAAAAAAAAAowNYAAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-07T12:36:13.441Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "UserRoleController.cs",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\UserRoleController.cs",
+              "RelativeDocumentMoniker": "Controllers\\UserRoleController.cs",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\Controllers\\UserRoleController.cs",
+              "RelativeToolTip": "Controllers\\UserRoleController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-07T12:36:10.015Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\.net(project)\\backend\\Student_project_man\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "D:\\.net(project)\\backend\\Student_project_man\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAFEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-30T09:32:44.676Z"
+            }
+          ]
+        },
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
