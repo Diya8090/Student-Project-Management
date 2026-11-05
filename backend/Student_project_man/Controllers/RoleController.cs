@@ -11,7 +11,7 @@ namespace Student_project_man.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class RoleController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -27,6 +27,7 @@ namespace Student_project_man.Controllers
 
         // GET: api/Role
         [HttpGet]
+        [Authorize(Roles = "Admin,Faculty,Student")]
         public async Task<ActionResult<IEnumerable<GetRoleDTO>>> GetRoles()
         {
             var roles = await _context.Roles
@@ -43,6 +44,7 @@ namespace Student_project_man.Controllers
 
         // GET: api/Role/5
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "Admin,Faculty,Student")]
         public async Task<ActionResult<GetRoleDTO>> GetRole(int id)
         {
             var role = await _context.Roles

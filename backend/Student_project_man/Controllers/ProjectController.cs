@@ -282,6 +282,12 @@ namespace Student_project_man.Controllers
                 });
             }
 
+            var childTasks = await _context.Tasks.Where(t => t.AllocationID == id).ToListAsync();
+            if (childTasks.Any())
+            {
+                _context.Tasks.RemoveRange(childTasks);
+            }
+
             _context.Projects.Remove(project);
             await _context.SaveChangesAsync();
 

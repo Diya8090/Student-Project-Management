@@ -2,9 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import "./AdminDashboard.css";
 
-// API Ports
-const PRIMARY_API_BASE = "http://localhost:5239/api";
-const FALLBACK_API_BASE = "https://localhost:7145/api";
+import { usersApi, projectsApi, tasksApi } from "../../../services/api";
 
 // SVG Icons
 const ICONS = {
@@ -75,32 +73,17 @@ function AdminDashboard() {
   const [facultyGuides, setFacultyGuides] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
 
-  // API helper with fallback
-  const fetchApi = useCallback(async (endpoint, options = {}) => {
-    try {
-      const res = await fetch(`${PRIMARY_API_BASE}${endpoint}`, options);
-      return res;
-    } catch {
-      const res = await fetch(`${FALLBACK_API_BASE}${endpoint}`, options);
-      return res;
-    }
-  }, []);
-
   // Fetch Dashboard Stats from backend API
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
 
     try {
-      // 1. Fetch Users
-      let allUsers = [];
-      try {
-        const usersRes = await fetchApi("/User");
-        if (usersRes.ok) {
-          allUsers = await usersRes.json();
-        }
-      } catch (err) {
-        console.warn("Could not fetch users for dashboard stats:", err);
-      }
+      // 1. Fetch Users, Projects, Tasks in parallel
+      const [allUsers, allProjects, allTasks] = await Promise.all([
+        usersApi.getAll().catch(() => []),
+        projectsApi.getAll().catch(() => []),
+        tasksApi.getAll().catch(() => []),
+      ]);
 
       const totalUsers = allUsers.length;
       const totalStudents = allUsers.filter(
@@ -117,29 +100,7 @@ function AdminDashboard() {
           (u.Role && u.Role.toLowerCase() === "faculty")
       );
       const totalFaculty = facultyList.length;
-
-      // 2. Fetch Projects
-      let allProjects = [];
-      try {
-        const projRes = await fetchApi("/Project");
-        if (projRes.ok) {
-          allProjects = await projRes.json();
-        }
-      } catch (err) {
-        console.warn("Could not fetch projects for dashboard stats:", err);
-      }
       const totalProjects = allProjects.length;
-
-      // 3. Fetch Tasks
-      let allTasks = [];
-      try {
-        const taskRes = await fetchApi("/Task");
-        if (taskRes.ok) {
-          allTasks = await taskRes.json();
-        }
-      } catch (err) {
-        console.warn("Could not fetch tasks for dashboard stats:", err);
-      }
       const totalTasks = allTasks.length;
 
       // Set Counts in Stats State
@@ -160,9 +121,9 @@ function AdminDashboard() {
       allProjects.forEach((p) => {
         const st = p.projectStatus ?? p.ProjectStatus;
         const stName = (p.statusName || p.StatusName || "").toLowerCase();
-        if (st === 2 || stName.includes("completed")) completedCount++;
-        else if (st === 1 || stName.includes("progress")) inProgressCount++;
-        else if (st === 3 || stName.includes("hold")) onHoldCount++;
+        if (st === 3 || stName.includes("completed")) completedCount++;
+        else if (st === 2 || stName.includes("progress")) inProgressCount++;
+        else if (st === 4 || stName.includes("rejected") || stName.includes("hold")) onHoldCount++;
         else notStartedCount++;
       });
 
@@ -170,7 +131,7 @@ function AdminDashboard() {
         { label: "Completed", value: completedCount, color: "#10b981", class: "status-completed" },
         { label: "In Progress", value: inProgressCount, color: "#3b82f6", class: "status-inprogress" },
         { label: "On Hold", value: onHoldCount, color: "#f59e0b", class: "status-onhold" },
-        { label: "Not Started", value: notStartedCount, color: "#ef4444", class: "status-notstarted" }
+        { label: "Pending", value: notStartedCount, color: "#ef4444", class: "status-notstarted" }
       ]);
 
       // Map Faculty Workload
@@ -216,7 +177,7 @@ function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [fetchApi]);
+  }, []);
 
   useEffect(() => {
     loadDashboardData();

@@ -1,26 +1,111 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./StudentDashboard.css";
+import { projectsApi, tasksApi, unwrapData } from "../../../services/api";
 
-const MOCK_ACTIVITIES = [
-  { id: 1, type: "task", user: "You", action: "completed task 'Implement Auth Guards'", time: "30 mins ago" },
-  { id: 2, type: "review", user: "Prof. Sunita Rao", action: "left feedback review on Milestone 1 code", time: "3 hrs ago" },
-  { id: 3, type: "system", user: "You", action: "uploaded 'Project proposal presentation slides.pdf'", time: "1 day ago" },
-  { id: 4, type: "task", user: "Aarav Patel", action: "started work on 'Database Schemas Setup'", time: "2 days ago" },
-  { id: 5, type: "review", user: "Prof. Sunita Rao", action: "assigned mark '26/30' for Milestone 1", time: "3 days ago" },
-  { id: 6, type: "task", user: "You", action: "created task 'Setup Axios API clients'", time: "4 days ago" }
+const DEFAULT_PRIORITY_DATA = [
+  { label: "High Priority", value: 1, color: "#dc2626" },
+  { label: "Medium Priority", value: 2, color: "#f59e0b" },
+  { label: "Low Priority", value: 1, color: "#2563eb" }
 ];
 
-const STATUS_DATA = [
-  { label: "High Priority", value: 3, color: "#dc2626" },  // Amber/Student Theme matches
-  { label: "Medium Priority", value: 3, color: "#f59e0b" },
-  { label: "Low Priority", value: 2, color: "#2563eb" }
+const DEFAULT_ACTIVITIES = [
+  { id: 1, type: "task", user: "You", action: "worked on Database Entities Schema", time: "30 mins ago" },
+  { id: 2, type: "review", user: "Faculty Guide", action: "left feedback on project proposal", time: "3 hrs ago" },
+  { id: 3, type: "task", user: "You", action: "updated task remarks", time: "1 day ago" }
 ];
 
 function StudentDashboard() {
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [hoveredStatus, setHoveredStatus] = useState(null);
   const [showAllActivities, setShowAllActivities] = useState(false);
+
+  const [stats, setStats] = useState({
+    myProjects: 1,
+    myTasks: 2,
+    completedTasks: 1,
+    pendingTasks: 1,
+    reviewsCount: 1,
+    completionRate: 50
+  });
+
+  const [priorityData, setPriorityData] = useState(DEFAULT_PRIORITY_DATA);
+  const [activities, setActivities] = useState(DEFAULT_ACTIVITIES);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("currentUser");
+    let userObj = null;
+    if (savedUser) {
+      try {
+        userObj = JSON.parse(savedUser);
+        setCurrentUser(userObj);
+      } catch (e) {}
+    }
+
+    const loadData = async () => {
+      try {
+        const [projsRes, tasksRes] = await Promise.all([
+          projectsApi.getAll(),
+          tasksApi.getAll()
+        ]);
+
+        const allProjs = unwrapData(projsRes) || [];
+        const allTasks = unwrapData(tasksRes) || [];
+
+        const studentId = userObj?.userId;
+        const myProjects = studentId && allProjs.some(p => (p.studentId || p.StudentId) === studentId)
+          ? allProjs.filter(p => (p.studentId || p.StudentId) === studentId)
+          : allProjs;
+
+        const myProjectIds = new Set(myProjects.map(p => p.projectId || p.ProjectId));
+        const myTasks = allTasks.filter(t => myProjectIds.has(t.allocationID || t.AllocationID || t.allocationId));
+        const relevantTasks = myTasks.length > 0 ? myTasks : allTasks;
+
+        const completed = relevantTasks.filter(t => (t.taskStatus || t.TaskStatus) === 3 || (t.progressPercentage || t.ProgressPercentage) >= 100).length;
+        const pending = relevantTasks.length - completed;
+        const reviews = relevantTasks.filter(t => (t.facultyRemarks || t.FacultyRemarks || "").trim().length > 0).length;
+        const rate = relevantTasks.length > 0 ? Math.round((completed / relevantTasks.length) * 100) : 0;
+
+        setStats({
+          myProjects: myProjects.length || 1,
+          myTasks: relevantTasks.length || 1,
+          completedTasks: completed,
+          pendingTasks: pending,
+          reviewsCount: reviews,
+          completionRate: rate
+        });
+
+        // Priority breakdown
+        const high = relevantTasks.filter(t => (t.priorityID || t.PriorityID) === 1).length;
+        const med = relevantTasks.filter(t => (t.priorityID || t.PriorityID) === 2).length;
+        const low = relevantTasks.filter(t => (t.priorityID || t.PriorityID) === 3).length;
+
+        setPriorityData([
+          { label: "High Priority", value: Math.max(high, 1), color: "#dc2626" },
+          { label: "Medium Priority", value: Math.max(med, 1), color: "#f59e0b" },
+          { label: "Low Priority", value: Math.max(low, 0), color: "#2563eb" }
+        ]);
+
+        if (relevantTasks.length > 0) {
+          const act = relevantTasks.slice(0, 6).map((t, idx) => ({
+            id: t.taskId || t.TaskId || idx,
+            type: (t.facultyRemarks || t.FacultyRemarks) ? "review" : "task",
+            user: (t.facultyRemarks || t.FacultyRemarks) ? "Faculty Guide" : "You",
+            action: (t.facultyRemarks || t.FacultyRemarks)
+              ? `reviewed '${t.taskTitle || t.TaskTitle}': "${t.facultyRemarks || t.FacultyRemarks}"`
+              : `updated task '${t.taskTitle || t.TaskTitle}' (${t.progressPercentage || t.ProgressPercentage || 0}%)`,
+            time: `${idx + 1} day ago`
+          }));
+          setActivities(act);
+        }
+      } catch (err) {
+        console.warn("Could not load dynamic student metrics:", err);
+      }
+    };
+
+    loadData();
+  }, []);
 
   // SVG chart parameters
   const width = 500;
@@ -39,7 +124,7 @@ function StudentDashboard() {
     { month: "Mar", progress: 40 },
     { month: "Apr", progress: 55 },
     { month: "May", progress: 75 },
-    { month: "Jun", progress: 85 }
+    { month: "Jun", progress: Math.max(stats.completionRate, 80) }
   ];
 
   const points = progressHistory.map((item, idx) => {
@@ -55,7 +140,7 @@ function StudentDashboard() {
   const areaPath = `${linePath} L ${points[points.length - 1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z`;
 
   // Donut chart parameters
-  const totalTasks = STATUS_DATA.reduce((acc, item) => acc + item.value, 0);
+  const totalTasks = priorityData.reduce((acc, item) => acc + item.value, 0) || 1;
   const donutCX = 80;
   const donutCY = 80;
   const donutR = 50;
@@ -67,7 +152,7 @@ function StudentDashboard() {
       <div className="dashboard-page-header">
         <div>
           <h2>Student Workspace</h2>
-          <p>Monitor your project milestone records, track task logs, and view feedback.</p>
+          <p>Welcome back, <strong>{currentUser?.fullName || "Scholar"}</strong>! Monitor your project milestone records, track task logs, and view feedback.</p>
         </div>
       </div>
 
@@ -83,7 +168,7 @@ function StudentDashboard() {
               </svg>
             </div>
           </div>
-          <span className="card-value">1</span>
+          <span className="card-value">{stats.myProjects}</span>
           <div className="stats-card-footer">
             <span className="trend-badge">Active</span>
             <span className="trend-desc">supervision</span>
@@ -100,9 +185,9 @@ function StudentDashboard() {
               </svg>
             </div>
           </div>
-          <span className="card-value">8</span>
+          <span className="card-value">{stats.myTasks}</span>
           <div className="stats-card-footer">
-            <span className="trend-badge alert-badge">3 Pending</span>
+            <span className="trend-badge alert-badge">{stats.pendingTasks} Pending</span>
             <span className="trend-desc">tasks</span>
           </div>
         </Link>
@@ -117,9 +202,9 @@ function StudentDashboard() {
               </svg>
             </div>
           </div>
-          <span className="card-value">5</span>
+          <span className="card-value">{stats.completedTasks}</span>
           <div className="stats-card-footer">
-            <span className="trend-badge">62% Done</span>
+            <span className="trend-badge">{stats.completionRate}% Done</span>
             <span className="trend-desc">progress</span>
           </div>
         </Link>
@@ -133,9 +218,9 @@ function StudentDashboard() {
               </svg>
             </div>
           </div>
-          <span className="card-value">4</span>
+          <span className="card-value">{stats.reviewsCount}</span>
           <div className="stats-card-footer">
-            <span className="trend-badge">4 Feedback</span>
+            <span className="trend-badge">{stats.reviewsCount} Feedback</span>
             <span className="trend-desc">reports</span>
           </div>
         </Link>
@@ -235,7 +320,7 @@ function StudentDashboard() {
           <div className="box-body donut-chart-container">
             <div className="donut-svg-wrapper">
               <svg viewBox="0 0 160 160" className="donut-chart">
-                {STATUS_DATA.map((item, idx) => {
+                {priorityData.map((item, idx) => {
                   const percent = (item.value / totalTasks) * 100;
                   const strokeDashoffset = donutC - (percent / 100) * donutC;
                   const rotation = (accumulatedPercent / 100) * 360;
@@ -262,10 +347,10 @@ function StudentDashboard() {
                 {/* Center Label Text */}
                 <g className="donut-center-text">
                   <text x={donutCX} y={donutCY - 4} textAnchor="middle" className="donut-center-label">
-                    {hoveredStatus !== null ? STATUS_DATA[hoveredStatus].label : "Tasks"}
+                    {hoveredStatus !== null ? priorityData[hoveredStatus].label : "Tasks"}
                   </text>
                   <text x={donutCX} y={donutCY + 14} textAnchor="middle" className="donut-center-val">
-                    {hoveredStatus !== null ? STATUS_DATA[hoveredStatus].value : totalTasks}
+                    {hoveredStatus !== null ? priorityData[hoveredStatus].value : totalTasks}
                   </text>
                 </g>
               </svg>
@@ -273,7 +358,7 @@ function StudentDashboard() {
 
             {/* Custom Interactive Legend List */}
             <div className="donut-legend-list">
-              {STATUS_DATA.map((item, idx) => (
+              {priorityData.map((item, idx) => (
                 <div
                   key={idx}
                   className={`donut-legend-item ${hoveredStatus === idx ? "legend-hover" : ""}`}
@@ -303,7 +388,7 @@ function StudentDashboard() {
         </div>
 
         <div className="activities-list-feed">
-          {MOCK_ACTIVITIES.slice(0, 4).map((activity) => (
+          {activities.slice(0, 4).map((activity) => (
             <div key={activity.id} className="activity-item-feed-row">
               <span className={`activity-icon-badge icon-${activity.type}`}></span>
               <div className="activity-main-desc">
@@ -329,7 +414,7 @@ function StudentDashboard() {
             </div>
             <div className="modal-body scrollable-activities-modal-body">
               <div className="activities-list-feed">
-                {MOCK_ACTIVITIES.map((activity) => (
+                {activities.map((activity) => (
                   <div key={activity.id} className="activity-item-feed-row">
                     <span className={`activity-icon-badge icon-${activity.type}`}></span>
                     <div className="activity-main-desc">

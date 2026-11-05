@@ -1,15 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./TotalProjectsDetail.css";
-
-const PRIMARY_API_BASE = "http://localhost:5239/api";
-const FALLBACK_API_BASE = "https://localhost:7145/api";
+import { projectsApi } from "../../../../services/api";
 
 const STATUS_MAP = {
-  1: "In Progress",
-  2: "Completed",
-  3: "Under Review",
-  4: "Delayed"
+  1: "Pending",
+  2: "In Progress",
+  3: "Completed",
+  4: "Rejected"
 };
 
 function TotalProjectsDetail() {
@@ -18,19 +16,8 @@ function TotalProjectsDetail() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const fetchApi = useCallback(async (endpoint, options = {}) => {
-    try {
-      const res = await fetch(`${PRIMARY_API_BASE}${endpoint}`, options);
-      return res;
-    } catch {
-      const res = await fetch(`${FALLBACK_API_BASE}${endpoint}`, options);
-      return res;
-    }
-  }, []);
-
   useEffect(() => {
-    fetchApi("/Project")
-      .then((res) => (res.ok ? res.json() : []))
+    projectsApi.getAll()
       .then((data) => {
         if (Array.isArray(data)) setProjects(data);
         setLoading(false);
@@ -39,7 +26,7 @@ function TotalProjectsDetail() {
         console.error("Error fetching projects in detail view:", err);
         setLoading(false);
       });
-  }, [fetchApi]);
+  }, []);
 
   const filteredProjects = projects.filter(p => {
     const title = p.projectTitle || p.ProjectTitle || "";

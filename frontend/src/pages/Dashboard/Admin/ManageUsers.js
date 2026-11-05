@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import "./ManageUsers.css";
 
-// API Base URLs (.NET Backend supports http on 5239 and https on 7145)
-const PRIMARY_API_BASE = "http://localhost:5239/api";
-const FALLBACK_API_BASE = "https://localhost:7145/api";
+import { usersApi, rolesApi } from "../../../services/api";
 
 const DEFAULT_ROLES = [
   { roleId: 1, roleName: "Admin" },
@@ -61,44 +59,21 @@ function ManageUsers() {
     [roles]
   );
 
-  // Api fetch wrapper with fallback port support
-  const fetchApi = useCallback(async (endpoint, options = {}) => {
-    try {
-      const res = await fetch(`${PRIMARY_API_BASE}${endpoint}`, options);
-      return res;
-    } catch {
-      // If http://localhost:5239 fails (e.g. SSL or port issue), try fallback https://localhost:7145
-      const res = await fetch(`${FALLBACK_API_BASE}${endpoint}`, options);
-      return res;
-    }
-  }, []);
-
   // Fetch Users & Roles on component load
   const loadData = useCallback(async () => {
     setLoading(true);
     setErrorMessage("");
 
     try {
-      // 1. Fetch Roles
-      try {
-        const rolesRes = await fetchApi("/Role");
-        if (rolesRes.ok) {
-          const rolesData = await rolesRes.json();
-          if (Array.isArray(rolesData) && rolesData.length > 0) {
-            setRoles(rolesData);
-          }
-        }
-      } catch (err) {
-        console.warn("Could not load dynamic roles from API, using default role mapping:", err);
+      const [rolesData, usersData] = await Promise.all([
+        rolesApi.getAll().catch(() => DEFAULT_ROLES),
+        usersApi.getAll().catch(() => []),
+      ]);
+
+      if (Array.isArray(rolesData) && rolesData.length > 0) {
+        setRoles(rolesData);
       }
 
-      // 2. Fetch Users
-      const usersRes = await fetchApi("/User");
-      if (!usersRes.ok) {
-        throw new Error(`Server returned status ${usersRes.status}`);
-      }
-
-      const usersData = await usersRes.json();
       setUsers(Array.isArray(usersData) ? usersData : []);
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -108,7 +83,7 @@ function ManageUsers() {
     } finally {
       setLoading(false);
     }
-  }, [fetchApi]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -149,17 +124,8 @@ function ManageUsers() {
     };
 
     try {
-      const response = await fetchApi(`/User/${userId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dtoPayload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update status (Status Code: ${response.status})`);
-      }
-
-      // HTTP 204 No Content returned on success, update state locally
+      await usersApi.update(userId, dtoPayload);
+      // Update state locally
       setUsers((prevUsers) =>
         prevUsers.map((u) => {
           const uId = u.userId ?? u.UserId ?? u.id;
@@ -218,15 +184,7 @@ function ManageUsers() {
     }
 
     try {
-      const response = await fetchApi(`/User/${userId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete user (Status Code: ${response.status})`);
-      }
-
-      // HTTP 204 No Content returned on success
+      await usersApi.delete(userId);
       setUsers((prevUsers) =>
         prevUsers.filter((u) => (u.userId ?? u.UserId ?? u.id) !== userId)
       );
@@ -263,7 +221,7 @@ function ManageUsers() {
     const dtoPayload = {
       fullName: formData.fullName.trim(),
       email: emailClean,
-      password: formData.password,
+      password: formData.password || "user123",
       mobileNumber: formData.mobileNumber.trim(),
       profilePicturePath: "",
       roleId: roleIdInt,
@@ -276,22 +234,10 @@ function ManageUsers() {
     // ==================================================
     if (modalMode === "add") {
       try {
-        const response = await fetchApi("/User", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dtoPayload),
-        });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(errText || `Server responded with status ${response.status}`);
-        }
-
-        // POST returns CreatedAtAction with GetUserDTO object
-        const createdUser = await response.json();
-
+        const createdUser = await usersApi.create(dtoPayload);
         setUsers((prevUsers) => [...prevUsers, createdUser]);
         setShowModal(false);
+        loadData();
       } catch (error) {
         console.error("Error adding user:", error);
         alert("Failed to add user: " + error.message);
@@ -302,18 +248,7 @@ function ManageUsers() {
     // ==================================================
     else {
       try {
-        const response = await fetchApi(`/User/${selectedUserId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dtoPayload),
-        });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(errText || `Server responded with status ${response.status}`);
-        }
-
-        // PUT returns 204 No Content (No JSON body)
+        await usersApi.update(selectedUserId, dtoPayload);
         setUsers((prevUsers) =>
           prevUsers.map((u) => {
             const uId = u.userId ?? u.UserId ?? u.id;
@@ -339,8 +274,8 @@ function ManageUsers() {
             return u;
           })
         );
-
         setShowModal(false);
+        loadData();
       } catch (error) {
         console.error("Error updating user:", error);
         alert("Failed to update user: " + error.message);

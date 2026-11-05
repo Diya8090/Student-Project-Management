@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import "./ManageFaculty.css";
 
-const PRIMARY_API_BASE = "http://localhost:5239/api";
-const FALLBACK_API_BASE = "https://localhost:7145/api";
+import { usersApi, projectsApi } from "../../../services/api";
 
 function ManageFaculty() {
   const [faculty, setFaculty] = useState([]);
@@ -27,29 +26,16 @@ function ManageFaculty() {
     mobileNumber: "",
   });
 
-  // API helper with fallback
-  const fetchApi = useCallback(async (endpoint, options = {}) => {
-    try {
-      const res = await fetch(`${PRIMARY_API_BASE}${endpoint}`, options);
-      return res;
-    } catch {
-      const res = await fetch(`${FALLBACK_API_BASE}${endpoint}`, options);
-      return res;
-    }
-  }, []);
-
   // Load Faculty & Projects from API
   const loadData = useCallback(async () => {
     setLoading(true);
     setErrorMessage("");
 
     try {
-      // 1. Fetch Users
-      const usersRes = await fetchApi("/User");
-      if (!usersRes.ok) {
-        throw new Error(`Failed to fetch users (Status: ${usersRes.status})`);
-      }
-      const allUsers = await usersRes.json();
+      const [allUsers, projList] = await Promise.all([
+        usersApi.getAll().catch(() => []),
+        projectsApi.getAll().catch(() => []),
+      ]);
 
       // Filter Faculty Guides (RoleId = 2 or Role = "Faculty")
       const facultyUsers = allUsers.filter(
@@ -58,17 +44,6 @@ function ManageFaculty() {
           (u.role && u.role.toLowerCase() === "faculty") ||
           (u.Role && u.Role.toLowerCase() === "faculty")
       );
-
-      // 2. Fetch Projects to calculate actual supervised count
-      let projList = [];
-      try {
-        const projRes = await fetchApi("/Project");
-        if (projRes.ok) {
-          projList = await projRes.json();
-        }
-      } catch (pErr) {
-        console.warn("Could not fetch projects for supervised count:", pErr);
-      }
 
       // Map Faculty items
       const mappedFaculty = facultyUsers.map((f) => {
@@ -101,7 +76,7 @@ function ManageFaculty() {
     } finally {
       setLoading(false);
     }
-  }, [fetchApi]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -152,15 +127,9 @@ function ManageFaculty() {
     }
 
     try {
-      const response = await fetchApi(`/User/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete faculty (Status: ${response.status})`);
-      }
-
+      await usersApi.delete(id);
       setFaculty((prev) => prev.filter((f) => f.id !== id));
+      loadData();
     } catch (error) {
       console.error("Error deleting faculty:", error);
       alert("Failed to delete faculty record: " + error.message);
@@ -188,7 +157,7 @@ function ManageFaculty() {
     const dtoPayload = {
       fullName: formData.fullName.trim(),
       email: emailClean,
-      password: formData.password,
+      password: formData.password || "faculty123",
       mobileNumber: formData.mobileNumber.trim(),
       profilePicturePath: "",
       roleId: 2, // Faculty RoleId
@@ -198,69 +167,18 @@ function ManageFaculty() {
 
     if (modalMode === "add") {
       try {
-        const response = await fetchApi("/User", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dtoPayload),
-        });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(errText || `Failed to create faculty (Status: ${response.status})`);
-        }
-
-        const createdUser = await response.json();
-        const newId = createdUser.userId ?? createdUser.UserId;
-
-        const newFaculty = {
-          id: newId,
-          userId: newId,
-          fullName: dtoPayload.fullName,
-          email: dtoPayload.email,
-          department: formData.department,
-          designation: formData.designation,
-          supervisedCount: parseInt(formData.supervisedCount, 10) || 0,
-          mobileNumber: dtoPayload.mobileNumber,
-          isActive: true,
-        };
-
-        setFaculty((prev) => [...prev, newFaculty]);
+        await usersApi.create(dtoPayload);
         setShowModal(false);
+        loadData();
       } catch (error) {
         console.error("Error creating faculty:", error);
         alert("Failed to add faculty: " + error.message);
       }
     } else {
       try {
-        const response = await fetchApi(`/User/${selectedId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dtoPayload),
-        });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(errText || `Failed to update faculty (Status: ${response.status})`);
-        }
-
-        setFaculty((prev) =>
-          prev.map((f) => {
-            if (f.id === selectedId) {
-              return {
-                ...f,
-                fullName: dtoPayload.fullName,
-                email: dtoPayload.email,
-                department: formData.department,
-                designation: formData.designation,
-                supervisedCount: parseInt(formData.supervisedCount, 10) || 0,
-                mobileNumber: dtoPayload.mobileNumber,
-              };
-            }
-            return f;
-          })
-        );
-
+        await usersApi.update(selectedId, dtoPayload);
         setShowModal(false);
+        loadData();
       } catch (error) {
         console.error("Error updating faculty:", error);
         alert("Failed to update faculty: " + error.message);

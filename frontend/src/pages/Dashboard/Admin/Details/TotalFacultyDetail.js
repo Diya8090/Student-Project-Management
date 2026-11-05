@@ -1,9 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./TotalFacultyDetail.css";
-
-const PRIMARY_API_BASE = "http://localhost:5239/api";
-const FALLBACK_API_BASE = "https://localhost:7145/api";
+import { usersApi } from "../../../../services/api";
 
 function TotalFacultyDetail() {
   const [faculty, setFaculty] = useState([]);
@@ -11,19 +9,8 @@ function TotalFacultyDetail() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState("All");
 
-  const fetchApi = useCallback(async (endpoint, options = {}) => {
-    try {
-      const res = await fetch(`${PRIMARY_API_BASE}${endpoint}`, options);
-      return res;
-    } catch {
-      const res = await fetch(`${FALLBACK_API_BASE}${endpoint}`, options);
-      return res;
-    }
-  }, []);
-
   useEffect(() => {
-    fetchApi("/User")
-      .then((res) => (res.ok ? res.json() : []))
+    usersApi.getAll()
       .then((data) => {
         if (Array.isArray(data)) {
           const facultyList = data.filter(
@@ -40,7 +27,7 @@ function TotalFacultyDetail() {
         console.error("Error fetching faculty in detail view:", err);
         setLoading(false);
       });
-  }, [fetchApi]);
+  }, []);
 
   const filteredFaculty = faculty.filter(f => {
     const name = f.fullName || f.FullName || f.name || "";

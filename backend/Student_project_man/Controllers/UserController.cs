@@ -36,16 +36,17 @@ namespace Student_project_man.Controllers
         {
             try
             {
+                var emailClean = (dto.Email ?? "").Trim().ToLower();
                 var user = await _context.Users
                     .Include(u => u.UserRoles)
                         .ThenInclude(ur => ur.Roles)
                     .SingleOrDefaultAsync(u =>
-                        u.Email == dto.Email &&
+                        u.Email.ToLower() == emailClean &&
                         u.Password == dto.Password);
 
                 if (user == null)
                 {
-                    return Unauthorized("Invalid Email or password");
+                    return Unauthorized(new { message = "Invalid Email or password" });
                 }
 
                 // Get user's role
@@ -53,22 +54,41 @@ namespace Student_project_man.Controllers
                     .Select(ur => ur.Roles.RoleName)
                     .FirstOrDefault();
 
+                var roleId = user.UserRoles
+                    .Select(ur => ur.RoleId)
+                    .FirstOrDefault();
+
                 if (string.IsNullOrEmpty(roleName))
                 {
-                    return Unauthorized("User role not found");
+                    return Unauthorized(new { message = "User role not found" });
                 }
 
                 // Generate JWT token
                 var token = _tokenService.GenerateToken(user, roleName);
 
+                var avatar = !string.IsNullOrWhiteSpace(user.ProfilePicturePath)
+                    ? user.ProfilePicturePath
+                    : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
+
                 return Ok(new
                 {
-                    Token = token
+                    Token = token,
+                    User = new
+                    {
+                        UserId = user.UserId,
+                        FullName = user.FullName,
+                        Email = user.Email,
+                        Role = roleName,
+                        RoleId = roleId,
+                        MobileNumber = user.MobileNumber,
+                        ProfilePicturePath = avatar,
+                        IsActive = user.IsActive
+                    }
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Something went wrong: " + ex.Message);
+                return StatusCode(500, new { message = "Something went wrong: " + ex.Message });
             }
         }
 
@@ -76,7 +96,7 @@ namespace Student_project_man.Controllers
         [HttpGet]
         public async Task<ActionResult> GetUsers(
             int pageNumber = 1,
-            int pageSize = 10,
+            int pageSize = 1000,
             string? search = null,
             bool? isActive = null,
             int? roleId = null)
@@ -89,13 +109,13 @@ namespace Student_project_man.Controllers
 
             if (pageSize < 1)
             {
-                pageSize = 10;
+                pageSize = 1000;
             }
 
             // Maximum page size
-            if (pageSize > 100)
+            if (pageSize > 1000)
             {
-                pageSize = 100;
+                pageSize = 1000;
             }
 
             // Base query
@@ -223,6 +243,7 @@ namespace Student_project_man.Controllers
                 });
             }
 
+            var defaultAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
             var user = new SPM_User
             {
                 FullName = dto.FullName,
@@ -230,7 +251,7 @@ namespace Student_project_man.Controllers
                 Password = dto.Password,
                 MobileNumber = dto.MobileNumber,
                 ProfilePicturePath =
-                    dto.ProfilePicturePath ?? string.Empty,
+                    !string.IsNullOrWhiteSpace(dto.ProfilePicturePath) ? dto.ProfilePicturePath : defaultAvatar,
                 IsActive = dto.IsActive,
                 IsDeleted = dto.IsDeleted ?? false
             };
@@ -287,8 +308,10 @@ namespace Student_project_man.Controllers
             user.FullName = dto.FullName;
             user.Email = dto.Email;
             user.MobileNumber = dto.MobileNumber;
-            user.ProfilePicturePath =
-                dto.ProfilePicturePath ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(dto.ProfilePicturePath))
+            {
+                user.ProfilePicturePath = dto.ProfilePicturePath;
+            }
             user.IsActive = dto.IsActive;
 
             if (!string.IsNullOrWhiteSpace(dto.Password))
@@ -329,6 +352,15 @@ namespace Student_project_man.Controllers
             if (user == null)
             {
                 return NotFound();
+            }
+
+            var hasProjects = await _context.Projects.AnyAsync(p => p.StudentId == id || p.FacultyId == id);
+            if (hasProjects)
+            {
+                user.IsDeleted = true;
+                user.IsActive = false;
+                await _context.SaveChangesAsync();
+                return NoContent();
             }
 
             var userRoles = await _context.UserRoles

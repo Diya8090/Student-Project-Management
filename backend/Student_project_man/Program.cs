@@ -105,21 +105,18 @@ namespace Student_project_man
 
             var app = builder.Build();
 
-            app.UseHttpsRedirection();
-            app.UseAuthentication();
-            app.UseAuthorization();
-            app.MapControllers();
-
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
-                app.MapScalarApiReference("/");
+                app.MapScalarApiReference("/scalar");
             }
 
+            app.UseRouting();
             app.UseCors("AllowAll");
 
-            app.UseHttpsRedirection();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllers();
 

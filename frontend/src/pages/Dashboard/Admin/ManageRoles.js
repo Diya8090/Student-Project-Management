@@ -1,5 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./ManageRoles.css";
+import { rolesApi, unwrapData } from "../../../services/api";
+
+const DEFAULT_PERMISSIONS = {
+  projects: { read: true, write: true, delete: false, approve: false },
+  tasks: { read: true, write: true, delete: false, approve: false },
+  users: { read: false, write: false, delete: false, approve: false },
+  roles: { read: false, write: false, delete: false, approve: false }
+};
 
 const INITIAL_ROLES = [
   {
@@ -10,7 +18,7 @@ const INITIAL_ROLES = [
       projects: { read: true, write: true, delete: true, approve: true },
       tasks: { read: true, write: true, delete: true, approve: true },
       users: { read: true, write: true, delete: true, approve: true },
-      roles: { read: true, write: true, delete: true, approve: true },
+      roles: { read: true, write: true, delete: true, approve: true }
     }
   },
   {
@@ -21,7 +29,7 @@ const INITIAL_ROLES = [
       projects: { read: true, write: false, delete: false, approve: true },
       tasks: { read: true, write: true, delete: true, approve: false },
       users: { read: true, write: false, delete: false, approve: false },
-      roles: { read: false, write: false, delete: false, approve: false },
+      roles: { read: false, write: false, delete: false, approve: false }
     }
   },
   {
@@ -32,7 +40,7 @@ const INITIAL_ROLES = [
       projects: { read: true, write: true, delete: false, approve: false },
       tasks: { read: true, write: true, delete: false, approve: false },
       users: { read: false, write: false, delete: false, approve: false },
-      roles: { read: false, write: false, delete: false, approve: false },
+      roles: { read: false, write: false, delete: false, approve: false }
     }
   }
 ];
@@ -42,51 +50,100 @@ function ManageRoles() {
   const [selectedRoleIndex, setSelectedRoleIndex] = useState(0);
   const [newRole, setNewRole] = useState({ name: "", description: "" });
   const [showAddRole, setShowAddRole] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const loadRoles = async () => {
+    try {
+      setLoading(true);
+      const res = await rolesApi.getAll();
+      const rawRoles = unwrapData(res) || [];
+
+      if (rawRoles.length > 0) {
+        const mergedRoles = rawRoles.map((r) => {
+          const rId = r.roleId || r.RoleId;
+          const rName = r.roleName || r.RoleName;
+          const rDesc = r.description || r.Description || "System role.";
+
+          const existingPreset = INITIAL_ROLES.find(
+            (p) => p.roleName.toLowerCase() === rName.toLowerCase()
+          );
+
+          return {
+            RoleId: rId,
+            roleName: rName,
+            description: rDesc,
+            permissions: existingPreset
+              ? JSON.parse(JSON.stringify(existingPreset.permissions))
+              : JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS))
+          };
+        });
+        setRoles(mergedRoles);
+      }
+    } catch (e) {
+      console.warn("Could not fetch roles from server:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRoles();
+  }, []);
 
   // Toggle permissions
   const handleTogglePermission = (module, action) => {
     const updatedRoles = [...roles];
     const role = updatedRoles[selectedRoleIndex];
-    role.permissions[module][action] = !role.permissions[module][action];
-    setRoles(updatedRoles);
+    if (role && role.permissions && role.permissions[module]) {
+      role.permissions[module][action] = !role.permissions[module][action];
+      setRoles(updatedRoles);
+    }
   };
 
-  const handleAddRole = (e) => {
+  const handleAddRole = async (e) => {
     e.preventDefault();
     if (!newRole.name.trim()) return;
 
     const roleNameClean = newRole.name.trim();
-    const roleExists = roles.some(r => r.roleName.toLowerCase() === roleNameClean.toLowerCase());
+    const roleExists = roles.some((r) => r.roleName.toLowerCase() === roleNameClean.toLowerCase());
     if (roleExists) {
       alert(`Error: A role with the name "${roleNameClean}" already exists.`);
       return;
     }
 
-    const newRoleData = {
-      RoleId: roles.length > 0 ? Math.max(...roles.map(r => r.RoleId || 0)) + 1 : 1,
-      roleName: roleNameClean,
-      description: newRole.description.trim() || "Custom defined role permissions.",
-      permissions: {
-        projects: { read: false, write: false, delete: false, approve: false },
-        tasks: { read: false, write: false, delete: false, approve: false },
-        users: { read: false, write: false, delete: false, approve: false },
-        roles: { read: false, write: false, delete: false, approve: false },
-      }
-    };
-
-    setRoles([...roles, newRoleData]);
-    setSelectedRoleIndex(roles.length); // auto select newly created role
-    setNewRole({ name: "", description: "" });
-    setShowAddRole(false);
+    try {
+      await rolesApi.create({
+        roleName: roleNameClean,
+        description: newRole.description.trim() || "Custom defined role permissions."
+      });
+      await loadRoles();
+      setSelectedRoleIndex(roles.length);
+      setNewRole({ name: "", description: "" });
+      setShowAddRole(false);
+    } catch (err) {
+      console.error("Failed to add role:", err);
+      // Fallback local addition if needed
+      const newRoleData = {
+        RoleId: roles.length > 0 ? Math.max(...roles.map((r) => r.RoleId || 0)) + 1 : 1,
+        roleName: roleNameClean,
+        description: newRole.description.trim() || "Custom defined role permissions.",
+        permissions: JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS))
+      };
+      setRoles([...roles, newRoleData]);
+      setSelectedRoleIndex(roles.length);
+      setNewRole({ name: "", description: "" });
+      setShowAddRole(false);
+    }
   };
 
-  const activeRole = roles[selectedRoleIndex];
+  const activeRole = roles[selectedRoleIndex] || roles[0] || INITIAL_ROLES[0];
 
   // Helper count of total permissions enabled for active role
   const getEnabledCount = (role) => {
+    if (!role || !role.permissions) return 0;
     let count = 0;
-    Object.keys(role.permissions).forEach(mod => {
-      Object.keys(role.permissions[mod]).forEach(act => {
+    Object.keys(role.permissions).forEach((mod) => {
+      Object.keys(role.permissions[mod]).forEach((act) => {
         if (role.permissions[mod][act]) count++;
       });
     });
@@ -98,7 +155,7 @@ function ManageRoles() {
       <div className="roles-header">
         <div>
           <h2>Role & Access Management</h2>
-          <p>Configure user roles and granular access permissions across modules.</p>
+          <p>Configure user roles and granular access permissions across modules connected to database.</p>
         </div>
         <button onClick={() => setShowAddRole(!showAddRole)} className="btn-add-role-toggle">
           {showAddRole ? "Close Form" : "+ Create Custom Role"}
@@ -136,11 +193,11 @@ function ManageRoles() {
       <div className="roles-dashboard-grid">
         {/* Roles Directory (Left List) */}
         <div className="roles-directory-box">
-          <div className="box-section-title">Available Roles</div>
+          <div className="box-section-title">Available Roles {loading ? "(Syncing...)" : ""}</div>
           <div className="roles-list">
             {roles.map((r, idx) => (
               <div
-                key={r.roleName}
+                key={r.roleName || idx}
                 className={`role-item-card ${selectedRoleIndex === idx ? "active" : ""}`}
                 onClick={() => setSelectedRoleIndex(idx)}
               >
@@ -170,26 +227,27 @@ function ManageRoles() {
               <div className="col-action">Approve</div>
             </div>
 
-            {Object.keys(activeRole.permissions).map((mod) => (
-              <div key={mod} className="p-table-row">
-                <div className="col-module module-name-label">
-                  <strong>{mod.toUpperCase()}</strong>
-                  <span>Access to system {mod}</span>
-                </div>
-                {["read", "write", "delete", "approve"].map((action) => (
-                  <div key={action} className="col-action">
-                    <label className="switch-toggle-wrapper">
-                      <input
-                        type="checkbox"
-                        checked={activeRole.permissions[mod][action]}
-                        onChange={() => handleTogglePermission(mod, action)}
-                      />
-                      <span className="slider-round-switch"></span>
-                    </label>
+            {activeRole.permissions &&
+              Object.keys(activeRole.permissions).map((mod) => (
+                <div key={mod} className="p-table-row">
+                  <div className="col-module module-name-label">
+                    <strong>{mod.toUpperCase()}</strong>
+                    <span>Access to system {mod}</span>
                   </div>
-                ))}
-              </div>
-            ))}
+                  {["read", "write", "delete", "approve"].map((action) => (
+                    <div key={action} className="col-action">
+                      <label className="switch-toggle-wrapper">
+                        <input
+                          type="checkbox"
+                          checked={activeRole.permissions[mod][action]}
+                          onChange={() => handleTogglePermission(mod, action)}
+                        />
+                        <span className="slider-round-switch"></span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              ))}
           </div>
         </div>
       </div>

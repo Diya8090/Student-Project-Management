@@ -1,6 +1,6 @@
-import { useState } from "react";
-import "./ScoresRemarks.js"; // wait, should be ScoresRemarks.css
+import { useState, useEffect } from "react";
 import "./ScoresRemarks.css";
+import { tasksApi, projectsApi, usersApi, unwrapData } from "../../../services/api";
 
 const INITIAL_EVALUATIONS = [
   { id: 1, studentName: "Aarav Patel", projectName: "Student Project Management System", m1: 25, m2: 24, finalExam: 36, remarks: "Consistent progress and thorough system design." },
@@ -12,6 +12,7 @@ const INITIAL_EVALUATIONS = [
 
 function ScoresRemarks() {
   const [evaluations, setEvaluations] = useState(INITIAL_EVALUATIONS);
+  const [projects, setProjects] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [gradeFilter, setGradeFilter] = useState("All");
 
@@ -21,17 +22,53 @@ function ScoresRemarks() {
   const [selectedId, setSelectedId] = useState(null);
   const [formData, setFormData] = useState({
     studentName: "",
-    projectName: "Student Project Management System",
+    projectName: "",
     m1: 0,
     m2: 0,
     finalExam: 0,
     remarks: ""
   });
 
+  const loadBackendData = async () => {
+    try {
+      const [projsRes, usersRes] = await Promise.all([
+        projectsApi.getAll(),
+        usersApi.getAll()
+      ]);
+
+      const rawProjs = unwrapData(projsRes) || [];
+      setProjects(rawProjs);
+
+      const saved = localStorage.getItem("spm_evaluations_store");
+      if (saved) {
+        setEvaluations(JSON.parse(saved));
+      } else if (rawProjs.length > 0) {
+        // Build initial evaluation list from database projects
+        const mapped = rawProjs.map((p, idx) => ({
+          id: p.projectId || p.ProjectId || (idx + 1),
+          studentName: p.studentName || p.StudentName || `Student #${p.studentId || p.StudentId || idx + 1}`,
+          projectName: p.projectTitle || p.ProjectTitle,
+          m1: 25,
+          m2: 25,
+          finalExam: Math.min(40, Math.round(Number(p.progressPercentage || p.ProgressPercentage || 70) * 0.4)),
+          remarks: p.description || "Project on track."
+        }));
+        setEvaluations(mapped);
+        localStorage.setItem("spm_evaluations_store", JSON.stringify(mapped));
+      }
+    } catch (e) {
+      console.warn("Could not sync evaluations from backend:", e);
+    }
+  };
+
+  useEffect(() => {
+    loadBackendData();
+  }, []);
+
   const handleInputChange = (e) => {
     const val = e.target.name === "studentName" || e.target.name === "projectName" || e.target.name === "remarks"
       ? e.target.value
-      : parseInt(e.target.value) || 0;
+      : parseInt(e.target.value, 10) || 0;
 
     setFormData({
       ...formData,
@@ -39,7 +76,7 @@ function ScoresRemarks() {
     });
   };
 
-  const calculateTotal = (m1, m2, finalExam) => m1 + m2 + finalExam;
+  const calculateTotal = (m1, m2, finalExam) => (Number(m1) || 0) + (Number(m2) || 0) + (Number(finalExam) || 0);
 
   const getGrade = (total) => {
     if (total >= 90) return "A";
@@ -49,7 +86,8 @@ function ScoresRemarks() {
   };
 
   const handleOpenAdd = () => {
-    setFormData({ studentName: "", projectName: "Student Project Management System", m1: 0, m2: 0, finalExam: 0, remarks: "" });
+    const defaultProjName = projects[0] ? (projects[0].projectTitle || projects[0].ProjectTitle) : "General Project";
+    setFormData({ studentName: "", projectName: defaultProjName, m1: 0, m2: 0, finalExam: 0, remarks: "" });
     setModalMode("add");
     setShowModal(true);
   };
@@ -70,21 +108,26 @@ function ScoresRemarks() {
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this score evaluation?")) {
-      setEvaluations(evaluations.filter(ev => ev.id !== id));
+      const updated = evaluations.filter(ev => ev.id !== id);
+      setEvaluations(updated);
+      localStorage.setItem("spm_evaluations_store", JSON.stringify(updated));
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    let updated;
     if (modalMode === "add") {
       const newEv = {
         id: evaluations.length > 0 ? Math.max(...evaluations.map(ev => ev.id)) + 1 : 1,
         ...formData
       };
-      setEvaluations([...evaluations, newEv]);
+      updated = [...evaluations, newEv];
     } else {
-      setEvaluations(evaluations.map(ev => ev.id === selectedId ? { ...ev, ...formData } : ev));
+      updated = evaluations.map(ev => ev.id === selectedId ? { ...ev, ...formData } : ev);
     }
+    setEvaluations(updated);
+    localStorage.setItem("spm_evaluations_store", JSON.stringify(updated));
     setShowModal(false);
   };
 
@@ -93,9 +136,10 @@ function ScoresRemarks() {
     const total = calculateTotal(ev.m1, ev.m2, ev.finalExam);
     const grade = getGrade(total);
 
-    const matchesSearch = ev.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ev.projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ev.remarks.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      (ev.studentName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (ev.projectName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (ev.remarks || "").toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesGrade = gradeFilter === "All" || grade === gradeFilter;
 
@@ -236,11 +280,14 @@ function ScoresRemarks() {
               <div className="form-group">
                 <label>Project Title</label>
                 <select name="projectName" value={formData.projectName} onChange={handleInputChange}>
-                  <option value="Student Project Management System">Student Project Management System</option>
-                  <option value="E-Commerce Web Application">E-Commerce Web Application</option>
-                  <option value="IoT Smart Agriculture System">IoT Smart Agriculture System</option>
-                  <option value="AI-Powered Medical Diagnosis Tool">AI-Powered Medical Diagnosis Tool</option>
-                  <option value="Smart Solar Grid Monitor">Smart Solar Grid Monitor</option>
+                  {projects.length > 0 ? (
+                    projects.map((p) => {
+                      const title = p.projectTitle || p.ProjectTitle;
+                      return <option key={p.projectId || p.ProjectId} value={title}>{title}</option>;
+                    })
+                  ) : (
+                    <option value="General Project">General Project</option>
+                  )}
                 </select>
               </div>
 

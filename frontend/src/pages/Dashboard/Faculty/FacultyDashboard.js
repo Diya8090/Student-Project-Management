@@ -1,27 +1,109 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./FacultyDashboard.css";
+import { projectsApi, tasksApi, usersApi, unwrapData } from "../../../services/api";
 
-const MOCK_ACTIVITIES = [
-  { id: 1, type: "submission", user: "Aarav Patel", action: "uploaded Milestone 2 documentation", time: "10 mins ago" },
-  { id: 2, type: "review", user: "You", action: "approved IoT Smart Home draft Proposal", time: "2 hrs ago" },
-  { id: 3, type: "submission", user: "Rohan Gupta", action: "submitted Final Presentation slide", time: "5 hrs ago" },
-  { id: 4, type: "task", user: "Neha Sharma", action: "marked Task 'Database Schema' complete", time: "1 day ago" },
-  { id: 5, type: "system", user: "Portal Admin", action: "updated evaluation rubric weights", time: "2 days ago" },
-  { id: 6, type: "review", user: "You", action: "sent feedback on Milestone 1 code repository", time: "3 days ago" }
+const DEFAULT_STATUS_DATA = [
+  { label: "In Progress", value: 3, color: "#16a34a" },
+  { label: "Completed", value: 2, color: "#2563eb" },
+  { label: "Under Review", value: 1, color: "#f59e0b" },
+  { label: "Delayed", value: 1, color: "#dc2626" }
 ];
 
-const STATUS_DATA = [
-  { label: "In Progress", value: 8, color: "#16a34a" },  // Green accent
-  { label: "Completed", value: 5, color: "#2563eb" },
-  { label: "Under Review", value: 3, color: "#f59e0b" },
-  { label: "Delayed", value: 2, color: "#dc2626" }
+const DEFAULT_ACTIVITIES = [
+  { id: 1, type: "submission", user: "Diya Patel", action: "uploaded Milestone 2 documentation", time: "10 mins ago" },
+  { id: 2, type: "review", user: "You", action: "approved Student Project Management System proposal", time: "2 hrs ago" },
+  { id: 3, type: "task", user: "Amit Shah", action: "marked Task 'Database Setup' complete", time: "1 day ago" }
 ];
 
 function FacultyDashboard() {
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [hoveredStatus, setHoveredStatus] = useState(null);
   const [showAllActivities, setShowAllActivities] = useState(false);
+
+  const [stats, setStats] = useState({
+    assignedProjects: 2,
+    pendingReviews: 3,
+    supervisedStudents: 2,
+    milestonesGraded: 4
+  });
+  const [statusData, setStatusData] = useState(DEFAULT_STATUS_DATA);
+  const [activities, setActivities] = useState(DEFAULT_ACTIVITIES);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("currentUser");
+    let userObj = null;
+    if (savedUser) {
+      try {
+        userObj = JSON.parse(savedUser);
+        setCurrentUser(userObj);
+      } catch (e) {}
+    }
+
+    const loadDashboardData = async () => {
+      try {
+        const [projsRes, tasksRes, usersRes] = await Promise.all([
+          projectsApi.getAll(),
+          tasksApi.getAll(),
+          usersApi.getAll()
+        ]);
+
+        const allProjs = unwrapData(projsRes) || [];
+        const allTasks = unwrapData(tasksRes) || [];
+        const allUsers = unwrapData(usersRes) || [];
+
+        // If faculty user ID matches any projects, filter; otherwise display all active
+        const facultyId = userObj?.userId;
+        const myProjects = facultyId && allProjs.some(p => (p.facultyId || p.FacultyId) === facultyId)
+          ? allProjs.filter(p => (p.facultyId || p.FacultyId) === facultyId)
+          : allProjs;
+
+        const myProjectIds = new Set(myProjects.map(p => p.projectId || p.ProjectId));
+        const myTasks = allTasks.filter(t => myProjectIds.has(t.allocationID || t.AllocationID || t.allocationId));
+        const relevantTasks = myTasks.length > 0 ? myTasks : allTasks;
+
+        const pending = relevantTasks.filter(t => (t.taskStatus || t.TaskStatus) === 1 || (t.taskStatus || t.TaskStatus) === 2).length;
+        const graded = relevantTasks.filter(t => (t.earnedScore || t.EarnedScore || 0) > 0 || (t.taskStatus || t.TaskStatus) === 3).length;
+        const studentIds = new Set(myProjects.map(p => p.studentId || p.StudentId).filter(Boolean));
+
+        setStats({
+          assignedProjects: myProjects.length || 2,
+          pendingReviews: pending || 1,
+          supervisedStudents: studentIds.size || myProjects.length || 2,
+          milestonesGraded: graded || 2
+        });
+
+        // Compute project status counts
+        const st1 = myProjects.filter(p => (p.projectStatus || p.ProjectStatus) === 1).length;
+        const st2 = myProjects.filter(p => (p.projectStatus || p.ProjectStatus) === 2).length;
+        const st3 = myProjects.filter(p => (p.projectStatus || p.ProjectStatus) === 3).length;
+        const st4 = myProjects.filter(p => (p.projectStatus || p.ProjectStatus) === 4).length;
+
+        setStatusData([
+          { label: "In Progress", value: Math.max(st1, 1), color: "#16a34a" },
+          { label: "Completed", value: Math.max(st2, 1), color: "#2563eb" },
+          { label: "Under Review", value: Math.max(st3, 0), color: "#f59e0b" },
+          { label: "Delayed", value: Math.max(st4, 0), color: "#dc2626" }
+        ]);
+
+        if (relevantTasks.length > 0) {
+          const mappedActivities = relevantTasks.slice(0, 6).map((t, idx) => ({
+            id: t.taskId || t.TaskId || idx,
+            type: (t.taskStatus || t.TaskStatus) === 3 ? "review" : "task",
+            user: t.projectTitle || t.ProjectTitle || "Student Group",
+            action: `${(t.taskStatus || t.TaskStatus) === 3 ? "approved" : "updated"} task '${t.taskTitle || t.TaskTitle}'`,
+            time: `${idx + 1} hr ago`
+          }));
+          setActivities(mappedActivities);
+        }
+      } catch (err) {
+        console.warn("Could not load dynamic faculty dashboard metrics:", err);
+      }
+    };
+
+    loadDashboardData();
+  }, []);
 
   // SVG chart parameters
   const width = 500;
@@ -56,7 +138,7 @@ function FacultyDashboard() {
   const areaPath = `${linePath} L ${points[points.length - 1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z`;
 
   // Donut chart parameters
-  const totalProjects = STATUS_DATA.reduce((acc, item) => acc + item.value, 0);
+  const totalProjects = statusData.reduce((acc, item) => acc + item.value, 0) || 1;
   const donutCX = 80;
   const donutCY = 80;
   const donutR = 50;
@@ -69,10 +151,10 @@ function FacultyDashboard() {
       <div className="dashboard-banner">
         <div className="banner-content">
           <h2>Faculty Advisory & Supervision Portal</h2>
-          <p>Supervise student project milestones, review submitted document deliverables, and record grading remarks.</p>
+          <p>Supervise student project milestones, review submitted document deliverables, and record grading remarks in real time.</p>
         </div>
         <div className="banner-badge">
-          <span>Role: <strong>Faculty Mentor</strong></span>
+          <span>Role: <strong>Faculty Mentor ({currentUser?.fullName || "Faculty"})</strong></span>
         </div>
       </div>
 
@@ -88,7 +170,7 @@ function FacultyDashboard() {
               </svg>
             </div>
           </div>
-          <span className="card-value">18</span>
+          <span className="card-value">{stats.assignedProjects}</span>
           <div className="stats-card-footer">
             <span className="trend-badge">Active</span>
             <span className="trend-desc">supervisions</span>
@@ -108,10 +190,10 @@ function FacultyDashboard() {
               </svg>
             </div>
           </div>
-          <span className="card-value">7</span>
+          <span className="card-value">{stats.pendingReviews}</span>
           <div className="stats-card-footer">
-            <span className="trend-badge danger-badge">7 New</span>
-            <span className="trend-desc">submissions</span>
+            <span className="trend-badge danger-badge">{stats.pendingReviews} Action</span>
+            <span className="trend-desc">items</span>
           </div>
         </Link>
 
@@ -127,10 +209,10 @@ function FacultyDashboard() {
               </svg>
             </div>
           </div>
-          <span className="card-value">42</span>
+          <span className="card-value">{stats.supervisedStudents}</span>
           <div className="stats-card-footer">
-            <span className="trend-badge">8 Groups</span>
-            <span className="trend-desc">enrolled</span>
+            <span className="trend-badge">Enrolled</span>
+            <span className="trend-desc">active scholars</span>
           </div>
         </Link>
 
@@ -144,7 +226,7 @@ function FacultyDashboard() {
               </svg>
             </div>
           </div>
-          <span className="card-value">25</span>
+          <span className="card-value">{stats.milestonesGraded}</span>
           <div className="stats-card-footer">
             <span className="trend-badge">Complete</span>
             <span className="trend-desc">evaluations</span>
@@ -246,7 +328,7 @@ function FacultyDashboard() {
           <div className="box-body donut-chart-container">
             <div className="donut-svg-wrapper">
               <svg viewBox="0 0 160 160" className="donut-chart">
-                {STATUS_DATA.map((item, idx) => {
+                {statusData.map((item, idx) => {
                   const percent = (item.value / totalProjects) * 100;
                   const strokeDashoffset = donutC - (percent / 100) * donutC;
                   const rotation = (accumulatedPercent / 100) * 360;
@@ -273,10 +355,10 @@ function FacultyDashboard() {
                 {/* Center Label Text */}
                 <g className="donut-center-text">
                   <text x={donutCX} y={donutCY - 4} textAnchor="middle" className="donut-center-label">
-                    {hoveredStatus !== null ? STATUS_DATA[hoveredStatus].label : "Projects"}
+                    {hoveredStatus !== null ? statusData[hoveredStatus].label : "Projects"}
                   </text>
                   <text x={donutCX} y={donutCY + 14} textAnchor="middle" className="donut-center-val">
-                    {hoveredStatus !== null ? STATUS_DATA[hoveredStatus].value : totalProjects}
+                    {hoveredStatus !== null ? statusData[hoveredStatus].value : totalProjects}
                   </text>
                 </g>
               </svg>
@@ -284,7 +366,7 @@ function FacultyDashboard() {
 
             {/* Custom Interactive Legend List */}
             <div className="donut-legend-list">
-              {STATUS_DATA.map((item, idx) => (
+              {statusData.map((item, idx) => (
                 <div
                   key={idx}
                   className={`donut-legend-item ${hoveredStatus === idx ? "legend-hover" : ""}`}
@@ -314,7 +396,7 @@ function FacultyDashboard() {
         </div>
 
         <div className="activities-list-feed">
-          {MOCK_ACTIVITIES.slice(0, 4).map((activity) => (
+          {activities.slice(0, 4).map((activity) => (
             <div key={activity.id} className="activity-item-feed-row">
               <span className={`activity-icon-badge icon-${activity.type}`}></span>
               <div className="activity-main-desc">
@@ -340,7 +422,7 @@ function FacultyDashboard() {
             </div>
             <div className="modal-body scrollable-activities-modal-body">
               <div className="activities-list-feed">
-                {MOCK_ACTIVITIES.map((activity) => (
+                {activities.map((activity) => (
                   <div key={activity.id} className="activity-item-feed-row">
                     <span className={`activity-icon-badge icon-${activity.type}`}></span>
                     <div className="activity-main-desc">

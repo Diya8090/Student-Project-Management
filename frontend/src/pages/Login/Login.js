@@ -41,17 +41,27 @@ const ROLES = [
   },
 ];
 
+import { authApi } from "../../services/api";
+
+const ROLE_PRESETS = {
+  Student: { email: "diya@gmail.com", password: "student123" },
+  Faculty: { email: "raj@gmail.com", password: "faculty123" },
+  Admin: { email: "user@gmail.com", password: "admin123" },
+};
+
 function Login() {
   const navigate = useNavigate();
   const [loginData, setLoginData] = useState({
-    email: "",
-    password: "",
+    email: "diya@gmail.com",
+    password: "student123",
     role: "Student",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleChange = (e) => {
+    setErrorMsg("");
     setLoginData({
       ...loginData,
       [e.target.name]: e.target.value,
@@ -59,48 +69,31 @@ function Login() {
   };
 
   const handleRoleSelect = (role) => {
-    setLoginData({ ...loginData, role });
+    setErrorMsg("");
+    const preset = ROLE_PRESETS[role] || { email: "", password: "" };
+    setLoginData({
+      role,
+      email: preset.email,
+      password: preset.password,
+    });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setErrorMsg("");
 
-    setTimeout(() => {
-      const defaults = {
-        Student: {
-          fullName: "Aarav Patel",
-          email: loginData.email || "aarav.patel@student.university.edu",
-          mobileNumber: "+1 (555) 017-4321",
-          profilePictureLink: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-          isActive: true,
-          role: "Student"
-        },
-        Faculty: {
-          fullName: "Prof. Sunita Rao",
-          email: loginData.email || "sunita.rao@university.edu",
-          mobileNumber: "+1 (555) 014-9876",
-          profilePictureLink: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-          isActive: true,
-          role: "Faculty"
-        },
-        Admin: {
-          fullName: "Dr. Ramesh Kumar",
-          email: loginData.email || "admin@university.edu",
-          mobileNumber: "+1 (555) 019-2834",
-          profilePictureLink: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-          isActive: true,
-          role: "Admin"
-        }
-      };
-
-      const userProfile = defaults[loginData.role] || defaults.Student;
-      localStorage.setItem("currentUser", JSON.stringify(userProfile));
-
-      console.log(loginData);
-      navigate(ROLE_ROUTES[loginData.role]);
+    try {
+      const { user } = await authApi.login(loginData.email, loginData.password);
+      const roleTarget = user.role || loginData.role;
+      const destination = ROLE_ROUTES[roleTarget] || ROLE_ROUTES.Admin;
+      navigate(destination);
+    } catch (err) {
+      console.error("Login failed:", err);
+      setErrorMsg(err.message || "Invalid credentials. Please verify your email and password.");
+    } finally {
       setIsSubmitting(false);
-    }, 800);
+    }
   };
 
   return (
@@ -159,6 +152,19 @@ function Login() {
             </div>
 
             <form onSubmit={handleSubmit}>
+              {errorMsg && (
+                <div style={{
+                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  background: "rgba(239, 68, 68, 0.15)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  color: "#fca5a5",
+                  fontSize: "0.85rem",
+                  marginBottom: "16px"
+                }}>
+                  {errorMsg}
+                </div>
+              )}
               <div className="input-group">
                 <label htmlFor="email">Email address</label>
                 <div className="input-wrapper">

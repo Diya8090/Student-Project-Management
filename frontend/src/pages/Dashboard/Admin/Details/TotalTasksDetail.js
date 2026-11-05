@@ -1,9 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./TotalTasksDetail.css";
-
-const PRIMARY_API_BASE = "http://localhost:5239/api";
-const FALLBACK_API_BASE = "https://localhost:7145/api";
+import { tasksApi } from "../../../../services/api";
 
 const STATUS_MAP = {
   1: "Pending",
@@ -24,19 +22,8 @@ function TotalTasksDetail() {
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("All");
 
-  const fetchApi = useCallback(async (endpoint, options = {}) => {
-    try {
-      const res = await fetch(`${PRIMARY_API_BASE}${endpoint}`, options);
-      return res;
-    } catch {
-      const res = await fetch(`${FALLBACK_API_BASE}${endpoint}`, options);
-      return res;
-    }
-  }, []);
-
   useEffect(() => {
-    fetchApi("/Task")
-      .then((res) => (res.ok ? res.json() : []))
+    tasksApi.getAll()
       .then((data) => {
         if (Array.isArray(data)) setTasks(data);
         setLoading(false);
@@ -45,7 +32,7 @@ function TotalTasksDetail() {
         console.error("Error fetching tasks in detail view:", err);
         setLoading(false);
       });
-  }, [fetchApi]);
+  }, []);
 
   const filteredTasks = tasks.filter(t => {
     const matchesSearch = (t.TaskTitle || "").toLowerCase().includes(searchQuery.toLowerCase()) ||

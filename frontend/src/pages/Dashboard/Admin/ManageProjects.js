@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import "./ManageProjects.css";
 
-const PRIMARY_API_BASE = "http://localhost:5239/api";
-const FALLBACK_API_BASE = "https://localhost:7145/api";
+import { projectsApi, usersApi } from "../../../services/api";
 
 const STATUS_MAP = {
   1: "In Progress",
@@ -40,55 +39,38 @@ function ManageProjects() {
     ProgressPercentage: 0
   });
 
-  // Reusable API Fetch Helper with Fallback
-  const fetchApi = useCallback(async (endpoint, options = {}) => {
-    try {
-      const res = await fetch(`${PRIMARY_API_BASE}${endpoint}`, options);
-      return res;
-    } catch {
-      const res = await fetch(`${FALLBACK_API_BASE}${endpoint}`, options);
-      return res;
-    }
-  }, []);
-
   // Fetch Projects and Users (Students + Faculty) from API
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Fetch Projects
-      const projRes = await fetchApi("/Project");
-      if (projRes.ok) {
-        const data = await projRes.json();
-        setProjects(Array.isArray(data) ? data : []);
-      }
+      const [data, users] = await Promise.all([
+        projectsApi.getAll().catch(() => []),
+        usersApi.getAll().catch(() => []),
+      ]);
+      setProjects(Array.isArray(data) ? data : []);
 
-      // 2. Fetch Users to populate Student & Faculty dropdowns
-      const userRes = await fetchApi("/User");
-      if (userRes.ok) {
-        const users = await userRes.json();
-        if (Array.isArray(users)) {
-          const stds = users.filter(
-            (u) =>
-              u.roleId === 3 ||
-              (u.role && u.role.toLowerCase() === "student") ||
-              (u.Role && u.Role.toLowerCase() === "student")
-          );
-          const facs = users.filter(
-            (u) =>
-              u.roleId === 2 ||
-              (u.role && u.role.toLowerCase() === "faculty") ||
-              (u.Role && u.Role.toLowerCase() === "faculty")
-          );
-          setStudentsList(stds);
-          setFacultyList(facs);
-        }
+      if (Array.isArray(users)) {
+        const stds = users.filter(
+          (u) =>
+            u.roleId === 3 ||
+            (u.role && u.role.toLowerCase() === "student") ||
+            (u.Role && u.Role.toLowerCase() === "student")
+        );
+        const facs = users.filter(
+          (u) =>
+            u.roleId === 2 ||
+            (u.role && u.role.toLowerCase() === "faculty") ||
+            (u.Role && u.Role.toLowerCase() === "faculty")
+        );
+        setStudentsList(stds);
+        setFacultyList(facs);
       }
     } catch (err) {
       console.error("Error loading projects data:", err);
     } finally {
       setLoading(false);
     }
-  }, [fetchApi]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -162,19 +144,12 @@ function ManageProjects() {
     if (!window.confirm("Are you sure you want to delete this project?")) return;
 
     try {
-      const res = await fetchApi(`/Project/${id}`, {
-        method: "DELETE"
-      });
-
-      if (res.ok || res.status === 204) {
-        alert("Project deleted successfully.");
-        loadData();
-      } else {
-        alert("Failed to delete project from server.");
-      }
+      await projectsApi.delete(id);
+      alert("Project deleted successfully.");
+      loadData();
     } catch (err) {
       console.error("Error deleting project:", err);
-      alert("Network error while attempting to delete project.");
+      alert("Error while attempting to delete project: " + err.message);
     }
   };
 
@@ -223,40 +198,17 @@ function ManageProjects() {
 
     try {
       if (modalMode === "add") {
-        const res = await fetchApi("/Project", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-          alert("Project registered successfully!");
-          setShowModal(false);
-          loadData();
-        } else {
-          const errData = await res.json().catch(() => null);
-          alert(`Failed to add project: ${errData?.message || "Server Error"}`);
-        }
+        await projectsApi.create(payload);
+        alert("Project registered successfully!");
       } else {
-        // Edit Mode
-        const res = await fetchApi(`/Project/${selectedId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok || res.status === 204) {
-          alert("Project updated successfully!");
-          setShowModal(false);
-          loadData();
-        } else {
-          const errData = await res.json().catch(() => null);
-          alert(`Failed to update project: ${errData?.message || "Server Error"}`);
-        }
+        await projectsApi.update(selectedId, payload);
+        alert("Project updated successfully!");
       }
+      setShowModal(false);
+      loadData();
     } catch (err) {
       console.error("Error saving project:", err);
-      alert("Network error occurred while saving project.");
+      alert(`Failed to save project: ${err.message}`);
     }
   };
 

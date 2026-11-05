@@ -247,7 +247,7 @@ namespace Student_project_man.Controllers
         // Admin + Faculty
         // ============================================
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "Admin,Faculty")]
+        [Authorize(Roles = "Admin,Faculty,Student")]
         public async Task<IActionResult> PutTask(
             int id,
             AddEditTaskDTO dto)

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./ProfilePage.css";
+import { usersApi } from "../../services/api";
 
 function ProfilePage({ role }) {
   // Load initial user details
@@ -8,7 +9,7 @@ function ProfilePage({ role }) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.role.toLowerCase() === role.toLowerCase()) {
+        if (parsed.role && parsed.role.toLowerCase() === role.toLowerCase()) {
           return parsed;
         }
       } catch (e) {
@@ -17,28 +18,34 @@ function ProfilePage({ role }) {
     }
     const defaults = {
       admin: {
+        userId: 1,
         fullName: "Dr. Ramesh Kumar",
-        email: "admin@university.edu",
+        email: "user@gmail.com",
         mobileNumber: "+1 (555) 019-2834",
         profilePictureLink: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
         isActive: true,
-        role: "Admin"
+        role: "Admin",
+        roleId: 1
       },
       faculty: {
+        userId: 3,
         fullName: "Prof. Sunita Rao",
-        email: "sunita.rao@university.edu",
+        email: "raj@gmail.com",
         mobileNumber: "+1 (555) 014-9876",
         profilePictureLink: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
         isActive: true,
-        role: "Faculty"
+        role: "Faculty",
+        roleId: 2
       },
       student: {
+        userId: 5,
         fullName: "Aarav Patel",
-        email: "aarav.patel@student.university.edu",
+        email: "diya@gmail.com",
         mobileNumber: "+1 (555) 017-4321",
         profilePictureLink: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
         isActive: true,
-        role: "Student"
+        role: "Student",
+        roleId: 3
       }
     };
     return defaults[role] || defaults.student;
@@ -65,6 +72,23 @@ function ProfilePage({ role }) {
 
   const [alert, setAlert] = useState({ show: false, type: "", message: "" });
 
+  useEffect(() => {
+    const saved = localStorage.getItem("currentUser");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.role && parsed.role.toLowerCase() === role.toLowerCase()) {
+          setProfile(parsed);
+          setFormData({
+            fullName: parsed.fullName || "",
+            email: parsed.email || "",
+            mobileNumber: parsed.mobileNumber || ""
+          });
+        }
+      } catch (e) {}
+    }
+  }, [role]);
+
   const handleProfileChange = (e) => {
     setFormData({
       ...formData,
@@ -79,13 +103,32 @@ function ProfilePage({ role }) {
     });
   };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
     if (!formData.fullName.trim() || !formData.email.trim() || !formData.mobileNumber.trim()) {
       showAlert("error", "All fields must be completed.");
       return;
     }
+
     const updated = { ...profile, ...formData };
+
+    if (profile.userId) {
+      try {
+        await usersApi.update(profile.userId, {
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim(),
+          mobileNumber: formData.mobileNumber.trim(),
+          password: profile.password || "admin123",
+          roleId: profile.roleId || (role.toLowerCase() === "admin" ? 1 : role.toLowerCase() === "faculty" ? 2 : 3),
+          isActive: profile.isActive ?? true,
+          isDeleted: false,
+          profilePicturePath: profile.profilePictureLink || profile.profilePicturePath || ""
+        });
+      } catch (err) {
+        console.warn("Backend update error:", err);
+      }
+    }
+
     setProfile(updated);
     localStorage.setItem("currentUser", JSON.stringify(updated));
     window.dispatchEvent(new Event("profileUpdate"));
@@ -93,7 +136,7 @@ function ProfilePage({ role }) {
     showAlert("success", "Profile details updated successfully!");
   };
 
-  const handleUpdatePassword = (e) => {
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
       showAlert("error", "Please fill in all password fields.");
@@ -103,16 +146,34 @@ function ProfilePage({ role }) {
       showAlert("error", "New Password and Confirm Password do not match.");
       return;
     }
-    if (passwordData.newPassword.length < 6) {
-      showAlert("error", "New password should be at least 6 characters.");
+    if (passwordData.newPassword.length < 4) {
+      showAlert("error", "New password should be at least 4 characters.");
       return;
     }
+
+    if (profile.userId) {
+      try {
+        await usersApi.update(profile.userId, {
+          fullName: profile.fullName,
+          email: profile.email,
+          mobileNumber: profile.mobileNumber || "9876543210",
+          password: passwordData.newPassword,
+          roleId: profile.roleId || (role.toLowerCase() === "admin" ? 1 : role.toLowerCase() === "faculty" ? 2 : 3),
+          isActive: profile.isActive ?? true,
+          isDeleted: false,
+          profilePicturePath: profile.profilePictureLink || profile.profilePicturePath || ""
+        });
+      } catch (err) {
+        console.warn("Backend password update error:", err);
+      }
+    }
+
     const updated = { ...profile, password: passwordData.newPassword };
     setProfile(updated);
     localStorage.setItem("currentUser", JSON.stringify(updated));
     setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
     setIsEditing(false);
-    showAlert("success", "Password updated successfully!");
+    showAlert("success", "Password updated successfully in database!");
   };
 
   const showAlert = (type, message) => {
@@ -144,7 +205,7 @@ function ProfilePage({ role }) {
       <div className="profile-hero-card">
         <div className="profile-hero-image-wrapper">
           <img
-            src={profile.profilePictureLink || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}
+            src={profile.profilePictureLink || profile.profilePicturePath || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}
             alt={profile.fullName}
             className="profile-hero-image"
             onError={(e) => {

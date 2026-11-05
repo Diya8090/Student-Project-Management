@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
 import "./StudentTasks.css";
-
-const DEFAULT_SPM_TASKS = [
-  { TaskId: 1, AllocationID: 401, TaskTitle: "Establish Database Schema", TaskDescription: "Design SQL table entities and relationships", TaskStatus: 3, PriorityID: 1, AssignedScore: 10.00, EarnedScore: 10.00, ProgressPercentage: 100.00, StartDate: "2026-06-01", DueDate: "2026-06-25", CompletedDate: "2026-06-24", FacultyRemarks: "Exemplary relational structures.", StudentRemarks: "Fully satisfied parameters." },
-  { TaskId: 2, AllocationID: 401, TaskTitle: "Build Authentication Modules", TaskDescription: "Implement JWT & BCrypt password hashing", TaskStatus: 2, PriorityID: 1, AssignedScore: 15.00, EarnedScore: 0.00, ProgressPercentage: 65.00, StartDate: "2026-07-01", DueDate: "2026-07-20", CompletedDate: "", FacultyRemarks: "Ensure refresh tokens expire after 7 days.", StudentRemarks: "Drafted controller routes." },
-  { TaskId: 3, AllocationID: 401, TaskTitle: "Frontend Component Layout", TaskDescription: "Create React components for Dashboard & Tables", TaskStatus: 2, PriorityID: 2, AssignedScore: 12.00, EarnedScore: 0.00, ProgressPercentage: 40.00, StartDate: "2026-07-05", DueDate: "2026-07-28", CompletedDate: "", FacultyRemarks: "", StudentRemarks: "Sidebar and top bar finished." },
-  { TaskId: 4, AllocationID: 401, TaskTitle: "Draft Technical Report PDF", TaskDescription: "Write architecture documentation in LaTeX", TaskStatus: 1, PriorityID: 3, AssignedScore: 10.00, EarnedScore: 0.00, ProgressPercentage: 0.00, StartDate: "2026-07-15", DueDate: "2026-08-05", CompletedDate: "", FacultyRemarks: "", StudentRemarks: "" }
-];
+import { tasksApi, projectsApi, unwrapData } from "../../../services/api";
 
 const STATUS_MAP = {
   1: "Pending",
@@ -22,27 +16,69 @@ const PRIORITY_MAP = {
 };
 
 function StudentTasks() {
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem("spm_tasks_store");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return DEFAULT_SPM_TASKS;
-      }
-    }
-    localStorage.setItem("spm_tasks_store", JSON.stringify(DEFAULT_SPM_TASKS));
-    return DEFAULT_SPM_TASKS;
-  });
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const handleStorageChange = () => {
+  const loadTasks = async () => {
+    try {
+      setLoading(true);
+      const [tasksRes, projsRes] = await Promise.all([
+        tasksApi.getAll(),
+        projectsApi.getAll()
+      ]);
+
+      const rawTasks = unwrapData(tasksRes) || [];
+      const rawProjs = unwrapData(projsRes) || [];
+
+      const savedUser = localStorage.getItem("currentUser");
+      let studentId = null;
+      if (savedUser) {
+        try {
+          studentId = JSON.parse(savedUser).userId;
+        } catch (e) {}
+      }
+
+      // Filter tasks by student's projects if available
+      const myProjs = studentId && rawProjs.some(p => (p.studentId || p.StudentId) === studentId)
+        ? rawProjs.filter(p => (p.studentId || p.StudentId) === studentId)
+        : rawProjs;
+
+      const myProjIds = new Set(myProjs.map(p => p.projectId || p.ProjectId));
+      const relevant = rawTasks.filter(t => myProjIds.has(t.allocationID || t.AllocationID || t.allocationId));
+      const finalTasks = relevant.length > 0 ? relevant : rawTasks;
+
+      const normalized = finalTasks.map((t) => ({
+        TaskId: t.taskId || t.TaskId,
+        AllocationID: t.allocationID || t.AllocationID || t.allocationId,
+        TaskTitle: t.taskTitle || t.TaskTitle,
+        TaskDescription: t.taskDescription || t.TaskDescription || "No description provided.",
+        TaskStatus: t.taskStatus || t.TaskStatus || 1,
+        PriorityID: t.priorityID || t.PriorityID || 2,
+        AssignedScore: Number(t.assignedScore || t.AssignedScore || 0),
+        EarnedScore: Number(t.earnedScore || t.EarnedScore || 0),
+        ProgressPercentage: Number(t.progressPercentage || t.ProgressPercentage || 0),
+        DueDate: t.dueDate ? (typeof t.dueDate === "string" ? t.dueDate.split("T")[0] : t.dueDate) : "No due date"
+      }));
+
+      setTasks(normalized);
+    } catch (err) {
+      console.error("Failed to load student tasks:", err);
       const saved = localStorage.getItem("spm_tasks_store");
       if (saved) {
         try {
           setTasks(JSON.parse(saved));
         } catch (e) {}
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTasks();
+
+    const handleStorageChange = () => {
+      loadTasks();
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -57,42 +93,54 @@ function StudentTasks() {
     <div className="student-tasks-container">
       <div className="page-header">
         <h2>My Assigned Tasks</h2>
-        <p>Read-only view of project tasks assigned by your faculty guide according to SPM schema.</p>
+        <p>Live view of project tasks assigned by your faculty guide according to SPM database schema.</p>
       </div>
 
       <div className="tasks-board-card full-width-card">
-        <table className="tasks-table">
-          <thead>
-            <tr>
-              <th>Task Title</th>
-              <th>Description</th>
-              <th>Priority</th>
-              <th>Deadline Due</th>
-              <th>Progress</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((task) => (
-              <tr key={task.TaskId}>
-                <td className="task-name"><strong>{task.TaskTitle}</strong></td>
-                <td>{task.TaskDescription}</td>
-                <td>
-                  <span className={`priority-badge-tag priority-${(PRIORITY_MAP[task.PriorityID] || "Medium").toLowerCase()}`}>
-                    {PRIORITY_MAP[task.PriorityID] || "Medium"}
-                  </span>
-                </td>
-                <td>{task.DueDate}</td>
-                <td>{task.ProgressPercentage}%</td>
-                <td>
-                  <span className={`status-badge-pill task-status-${(STATUS_MAP[task.TaskStatus] || "Pending").toLowerCase().replace(" ", "-")}`}>
-                    {STATUS_MAP[task.TaskStatus] || "Pending"}
-                  </span>
-                </td>
+        {loading ? (
+          <div style={{ padding: "40px", textAlign: "center", color: "#6b7280" }}>Loading assigned tasks...</div>
+        ) : (
+          <table className="tasks-table">
+            <thead>
+              <tr>
+                <th>Task Title</th>
+                <th>Description</th>
+                <th>Priority</th>
+                <th>Deadline Due</th>
+                <th>Progress</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {tasks.length > 0 ? (
+                tasks.map((task) => (
+                  <tr key={task.TaskId}>
+                    <td className="task-name"><strong>{task.TaskTitle}</strong></td>
+                    <td>{task.TaskDescription}</td>
+                    <td>
+                      <span className={`priority-badge-tag priority-${(PRIORITY_MAP[task.PriorityID] || "Medium").toLowerCase()}`}>
+                        {PRIORITY_MAP[task.PriorityID] || "Medium"}
+                      </span>
+                    </td>
+                    <td>{task.DueDate}</td>
+                    <td>{task.ProgressPercentage}%</td>
+                    <td>
+                      <span className={`status-badge-pill task-status-${(STATUS_MAP[task.TaskStatus] || "Pending").toLowerCase().replace(" ", "-")}`}>
+                        {STATUS_MAP[task.TaskStatus] || "Pending"}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: "center", padding: "30px", color: "#6b7280" }}>
+                    No assigned tasks found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

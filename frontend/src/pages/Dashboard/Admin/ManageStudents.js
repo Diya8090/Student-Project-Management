@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import "./ManageStudents.css";
 
-const PRIMARY_API_BASE = "http://localhost:5239/api";
-const FALLBACK_API_BASE = "https://localhost:7145/api";
+import { usersApi, projectsApi } from "../../../services/api";
 
 function ManageStudents() {
   const [students, setStudents] = useState([]);
@@ -29,29 +28,17 @@ function ManageStudents() {
     mobileNumber: "",
   });
 
-  // API helper with fallback
-  const fetchApi = useCallback(async (endpoint, options = {}) => {
-    try {
-      const res = await fetch(`${PRIMARY_API_BASE}${endpoint}`, options);
-      return res;
-    } catch {
-      const res = await fetch(`${FALLBACK_API_BASE}${endpoint}`, options);
-      return res;
-    }
-  }, []);
-
   // Fetch Students, Faculty, and Projects from API
   const loadData = useCallback(async () => {
     setLoading(true);
     setErrorMessage("");
 
     try {
-      // 1. Fetch Users
-      const usersRes = await fetchApi("/User");
-      if (!usersRes.ok) {
-        throw new Error(`Failed to fetch users (Status: ${usersRes.status})`);
-      }
-      const allUsers = await usersRes.json();
+      const [allUsers, projList] = await Promise.all([
+        usersApi.getAll().catch(() => []),
+        projectsApi.getAll().catch(() => []),
+      ]);
+      setProjects(projList);
 
       // Filter Students (RoleId = 3 or Role = "Student")
       const studentUsers = allUsers.filter(
@@ -69,18 +56,6 @@ function ManageStudents() {
           (u.Role && u.Role.toLowerCase() === "faculty")
       );
       setFacultyGuides(facultyUsers);
-
-      // 2. Fetch Projects (to map assigned guide & project titles)
-      let projList = [];
-      try {
-        const projRes = await fetchApi("/Project");
-        if (projRes.ok) {
-          projList = await projRes.json();
-          setProjects(projList);
-        }
-      } catch (pErr) {
-        console.warn("Could not fetch projects list:", pErr);
-      }
 
       // Map Students with Project & Faculty info
       const mappedStudents = studentUsers.map((stu) => {
@@ -121,7 +96,7 @@ function ManageStudents() {
     } finally {
       setLoading(false);
     }
-  }, [fetchApi]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -175,15 +150,9 @@ function ManageStudents() {
     }
 
     try {
-      const response = await fetchApi(`/User/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete student (Status: ${response.status})`);
-      }
-
+      await usersApi.delete(id);
       setStudents((prev) => prev.filter((s) => s.id !== id));
+      loadData();
     } catch (error) {
       console.error("Error deleting student:", error);
       alert("Failed to delete student: " + error.message);
@@ -211,7 +180,7 @@ function ManageStudents() {
     const dtoPayload = {
       fullName: formData.fullName.trim(),
       email: emailClean,
-      password: formData.password,
+      password: formData.password || "student123",
       mobileNumber: formData.mobileNumber.trim(),
       profilePicturePath: "",
       roleId: 3, // Student RoleId
@@ -221,69 +190,18 @@ function ManageStudents() {
 
     if (modalMode === "add") {
       try {
-        const response = await fetchApi("/User", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dtoPayload),
-        });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(errText || `Failed to create student (Status: ${response.status})`);
-        }
-
-        const createdUser = await response.json();
-        const newId = createdUser.userId ?? createdUser.UserId;
-
-        const newStudent = {
-          id: newId,
-          userId: newId,
-          fullName: dtoPayload.fullName,
-          email: dtoPayload.email,
-          department: formData.department,
-          projectTitle: formData.projectTitle || "Not Assigned",
-          assignedGuide: formData.assignedGuide || "Unassigned",
-          mobileNumber: dtoPayload.mobileNumber,
-          isActive: true,
-        };
-
-        setStudents((prev) => [...prev, newStudent]);
+        await usersApi.create(dtoPayload);
         setShowModal(false);
+        loadData();
       } catch (error) {
         console.error("Error creating student:", error);
         alert("Failed to create student: " + error.message);
       }
     } else {
       try {
-        const response = await fetchApi(`/User/${selectedStudentId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dtoPayload),
-        });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(errText || `Failed to update student (Status: ${response.status})`);
-        }
-
-        setStudents((prev) =>
-          prev.map((s) => {
-            if (s.id === selectedStudentId) {
-              return {
-                ...s,
-                fullName: dtoPayload.fullName,
-                email: dtoPayload.email,
-                department: formData.department,
-                projectTitle: formData.projectTitle || "Not Assigned",
-                assignedGuide: formData.assignedGuide || "Unassigned",
-                mobileNumber: dtoPayload.mobileNumber,
-              };
-            }
-            return s;
-          })
-        );
-
+        await usersApi.update(selectedStudentId, dtoPayload);
         setShowModal(false);
+        loadData();
       } catch (error) {
         console.error("Error updating student:", error);
         alert("Failed to update student: " + error.message);

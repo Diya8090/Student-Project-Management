@@ -154,10 +154,10 @@ D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\staticwebassets.b
 D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\staticwebassets.development.json
 D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\staticwebassets.build.endpoints.json
 D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\swae.build.ex.cache
-D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
 D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\Student_.0DE8D99A.Up2Date
 D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\Student_project_man.dll
 D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\refint\Student_project_man.dll
 D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\Student_project_man.pdb
 D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\Student_project_man.genruntimeconfig.cache
 D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\ref\Student_project_man.dll
+D:\.net(project)\backend\Student_project_man\obj\Debug\net10.0\Student_project_man.sourcelink.json
